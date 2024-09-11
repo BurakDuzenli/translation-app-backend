@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 from yt_dlp import YoutubeDL
-import faster_whisper
+from faster_whisper import WhisperModel
 import os
 import tempfile
 import subprocess
@@ -10,6 +11,7 @@ from urllib.parse import urlsplit
 import shutil
 
 app = Flask(__name__)
+CORS(app)  # This will enable CORS for all routes
 
 # Global variable to store the loaded model
 loaded_model = None
@@ -132,7 +134,7 @@ def convert_to_wav(video_path):
 def load_model(model_size):
     global loaded_model, current_model_size
     if loaded_model is None or current_model_size != model_size:
-        loaded_model = faster_whisper.load_model(model_size)
+        loaded_model = WhisperModel(model_size)
         current_model_size = model_size
     return loaded_model
 
@@ -175,6 +177,7 @@ def transcribe_audio(audio_file, language, initial_prompt, word_level_timestamps
             })
 
     return output
+
 
 if __name__ == "__main__":
     app.run(debug=True)
