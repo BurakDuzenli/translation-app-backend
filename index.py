@@ -43,28 +43,38 @@ def process_video():
 
     video_path_local_list = []
 
-    if video_type == "Youtube video or playlist":
-        url = request.form.get('url')
-        video_path_local_list = process_youtube(url)
-    elif video_type == "Google Drive":
-        file = request.files.get('file')
-        if file:
-            video_path_local_list = process_google_drive(file)
-    elif video_type == "Direct download":
-        ddl_url = request.form.get('ddl_url')
-        video_path_local_list = process_direct_download(ddl_url)
-    else:
-        return jsonify({"error": "Unsupported input type"}), 400
+    try:
+        if video_type == "Youtube video or playlist":
+            url = request.form.get('url')
+            video_path_local_list = process_youtube(url)
+        elif video_type == "Google Drive":
+            file = request.files.get('file')
+            if file:
+                video_path_local_list = process_google_drive(file)
+        elif video_type == "Direct download":
+            ddl_url = request.form.get('ddl_url')
+            video_path_local_list = process_direct_download(ddl_url)
+        else:
+            return jsonify({"error": "Unsupported input type"}), 400
 
-    results = []
-    for video_path_local in video_path_local_list:
-        wav_path = convert_to_wav(video_path_local)
-        result = transcribe_audio(wav_path, language, initial_prompt, word_level_timestamps, vad_filter, vad_filter_min_silence_duration_ms, text_only, model_size)
-        results.append(result)
-        os.remove(wav_path)
-        os.remove(video_path_local)
+        results = []
+        for video_path_local in video_path_local_list:
+            wav_path = convert_to_wav(video_path_local)
+            result = transcribe_audio(wav_path, language, initial_prompt, word_level_timestamps, vad_filter, vad_filter_min_silence_duration_ms, text_only, model_size)
+            results.append(result)
+            
+            # Safely remove files
+            if os.path.exists(wav_path):
+                os.remove(wav_path)
+            if os.path.exists(video_path_local):
+                os.remove(video_path_local)
 
-    return jsonify({"results": results})
+        return jsonify({"results": results})
+    
+    except Exception as e:
+        # Log the error
+        app.logger.error(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/download_transcription", methods=['POST'])
 def download_transcription():
