@@ -152,7 +152,7 @@ def transcribe_audio(audio_file, language, initial_prompt, word_level_timestamps
     model = load_model(model_size)
     
     segments, info = model.transcribe(
-        audio_file,
+        str(audio_file),
         beam_size=5,
         language=None if language == "auto" else language,
         initial_prompt=initial_prompt,
