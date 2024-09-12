@@ -32,7 +32,7 @@ def hello_world():
 
 @app.route("/process_video", methods=['POST'])
 def process_video():
-    app.logger.info("Starting video processing")
+    print("Starting video processing")
     video_type = request.form.get('type')
     language = request.form.get('language', 'auto')
     initial_prompt = request.form.get('initial_prompt', '')
@@ -47,21 +47,21 @@ def process_video():
     video_path_local_list = []
 
     try:
-        app.logger.info(f"Loading model: {model_size}")
+        print(f"Loading model: {model_size}")
         model = load_model(model_size)
-        app.logger.info("Model loaded successfully")
+        print("Model loaded successfully")
 
         if video_type == "Youtube video or playlist":
-            app.logger.info("Processing YouTube video")
+            print("Processing YouTube video")
             url = request.form.get('url')
             video_path_local_list = process_youtube(url)
         elif video_type == "Google Drive":
-            app.logger.info("Processing Google Drive file")
+            print("Processing Google Drive file")
             file = request.files.get('file')
             if file:
                 video_path_local_list = process_google_drive(file)
         elif video_type == "Direct download":
-            app.logger.info("Processing direct download")
+            print("Processing direct download")
             ddl_url = request.form.get('ddl_url')
             video_path_local_list = process_direct_download(ddl_url)
         else:
@@ -69,15 +69,15 @@ def process_video():
 
         results = []
         for video_path_local in video_path_local_list:
-            app.logger.info(f"Converting to WAV: {video_path_local}")
+            print(f"Converting to WAV: {video_path_local}")
             wav_path = convert_to_wav(video_path_local)
-            app.logger.info("WAV conversion complete")
+            print("WAV conversion complete")
 
-            app.logger.info("Starting transcription")
+            print("Starting transcription")
             result = transcribe_audio(wav_path, language, initial_prompt, word_level_timestamps, 
                                       vad_filter, vad_filter_min_silence_duration_ms, text_only, 
                                       model_size, task, target_language)
-            app.logger.info("Transcription complete")
+            print("Transcription complete")
             results.append(result)
             
             # Safely remove files
@@ -86,7 +86,7 @@ def process_video():
             if os.path.exists(video_path_local):
                 os.remove(video_path_local)
 
-        app.logger.info("Video processing completed successfully")
+        print("Video processing completed successfully")
         return jsonify({"results": results})
     
     except Exception as e:
